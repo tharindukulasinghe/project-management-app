@@ -32,7 +32,7 @@ class NavBar extends Component {
             </NavLink>
           </div>
         </div>
-        <form class="form-inline my-2 my-lg-0">
+        <form className="form-inline my-2 my-lg-0">
           {!this.props.user && (
             <React.Fragment>
               <NavLink className="nav-item nav-link" to="/login">

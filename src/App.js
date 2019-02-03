@@ -14,6 +14,7 @@ import { getCurrentUser } from "./services/authService";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Projects from "./components/projects";
+import NewProject from "./components/newproject";
 
 class App extends Component {
   state = {};
@@ -36,6 +37,7 @@ class App extends Component {
             <Route path="/logout" component={Logout} />
             <Route path="/register" component={Register} />
             <Route path="/projects" exact component={Projects} />
+            <Route path="/new-project" exact component={NewProject} />
             <Route path="/not-found" exact component={NotFound} />
             <Route path="/" exact component={Home} />
             <Redirect to="/not-found" />
