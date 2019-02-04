@@ -15,6 +15,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Projects from "./components/projects";
 import NewProject from "./components/newproject";
+import DashBoard from "./components/dashboard";
 
 class App extends Component {
   state = {};
@@ -36,6 +37,7 @@ class App extends Component {
             <Route path="/login" component={Login} />
             <Route path="/logout" component={Logout} />
             <Route path="/register" component={Register} />
+            <Route path="/projects/:id" component={DashBoard} />
             <Route path="/projects" exact component={Projects} />
             <Route path="/new-project" exact component={NewProject} />
             <Route path="/not-found" exact component={NotFound} />

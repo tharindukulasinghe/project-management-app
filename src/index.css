@@ -6,6 +6,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background: #e2e1e0;
 }
 
 code {
@@ -15,4 +16,16 @@ code {
 
 .navbar {
   margin-bottom: 30px;
+}
+
+.card-5 {
+  box-shadow: 0 5px 5px rgba(0, 0, 0, 0.3), 0 5px 5px rgba(0, 0, 0, 0.22);
+}
+
+.card {
+  background: #fff;
+  border-radius: 5px;
+  display: inline-block;
+  margin: 1rem;
+  position: relative;
 }
