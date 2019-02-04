@@ -30,6 +30,11 @@ class NavBar extends Component {
             <NavLink className="nav-item nav-link" to="/customers">
               Customers
             </NavLink>
+            {this.props.user && (
+              <NavLink className="nav-item nav-link" to="/projects">
+                My Projects
+              </NavLink>
+            )}
           </div>
         </div>
         <form className="form-inline my-2 my-lg-0">

@@ -28,3 +28,24 @@ export function getProjects() {
   let email = getCurrentUser().email;
   return http.get(apiEndpoint + `/getByemail?email=${email}`);
 }
+
+export function newTaskCategory(category, id) {
+  console.log(id);
+  return http.post(apiEndpoint + "/newcategory", {
+    name: category,
+    projectId: id
+  });
+}
+
+export function getCategories(id) {
+  return http.get(apiEndpoint + `/getCategories?id=${id}`);
+}
+
+export function newTask(title, description, category, projectId) {
+  return http.post(apiEndpoint + "/newProjectTask", {
+    title: title,
+    description: description,
+    category: category,
+    projectId: projectId
+  });
+}
