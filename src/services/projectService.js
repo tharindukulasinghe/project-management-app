@@ -49,3 +49,7 @@ export function newTask(title, description, category, projectId) {
     projectId: projectId
   });
 }
+
+export function getProjectTasks(id) {
+  return http.get(apiEndpoint + `/getProjectTasks?id=${id}`);
+}

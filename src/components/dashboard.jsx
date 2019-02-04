@@ -2,7 +2,8 @@ import React, { Component } from "react";
 import {
   newTaskCategory,
   getCategories,
-  newTask
+  newTask,
+  getProjectTasks
 } from "../services/projectService";
 class DashBoard extends Component {
   state = {
@@ -16,7 +17,8 @@ class DashBoard extends Component {
       description: "",
       category: ""
     },
-    taskerror: null
+    taskerror: null,
+    projectTasks: []
   };
 
   async componentDidMount() {
@@ -33,6 +35,9 @@ class DashBoard extends Component {
           category: categories.data[0].name
         }
       });
+
+      this.getProjectTasks();
+
       //refresh categories
     } catch (error) {
       alert(error);
@@ -107,6 +112,23 @@ class DashBoard extends Component {
   onOptionSelect(option) {
     this.setState({ selectedOption: option });
   }
+
+  async getProjectTasks() {
+    const projectTasks = await getProjectTasks(
+      this.props.location.state.project.id
+    );
+    this.setState({
+      ...this.state,
+      projectTasks: projectTasks.data
+    });
+  }
+  newTaskF = () => {
+    this.setState({
+      ...this.state,
+      selectedOption: "Add a project task"
+    });
+  };
+
   render() {
     let options = this.getOptions();
 
@@ -118,10 +140,37 @@ class DashBoard extends Component {
     );
 
     let tasks = this.state.selectedOption === "Project tasks" && (
-      <div class="card">
+      <div class="card" style={{ marginRight: 0, paddingRight: 0 }}>
         <div class="card-body">
-          <button class="btn btn-success">Add a task</button>
-          <button class="btn btn-info m-2">Refresh tasks</button>
+          <button class="btn btn-success" onClick={this.newTaskF}>
+            Add a task
+          </button>
+          <button class="btn btn-info m-2" onClick={this.getProjectTasks}>
+            Refresh tasks
+          </button>
+          <div className="row">
+            {this.state.projectTasks.map(task => {
+              return (
+                <div className="col-6">
+                  <div class="card" style={{ width: 330 }}>
+                    <div class="card-body">
+                      <h5 class="card-title">{task.title}</h5>
+                      <h6 class="card-subtitle mb-2 text-muted">
+                        {task.category}
+                      </h6>
+                      <p class="card-text">{task.description}</p>
+                      <a href="#" class="card-link">
+                        Card link
+                      </a>
+                      <a href="#" class="card-link">
+                        Another link
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
     );
@@ -224,6 +273,50 @@ class DashBoard extends Component {
         </div>
       </div>
     );
+
+    let collaborators = this.state.selectedOption ===
+      "Invite collaborators" && (
+      <div class="card">
+        <div class="card-header">Invite Collaborators</div>
+        <div class="card-body">
+          {this.state.colerror && (
+            <div className="alert alert-danger" role="alert">
+              {this.state.colerror}
+            </div>
+          )}
+          <form class="form-inline">
+            <div class="form-group mb-2">
+              <label for="staticEmail2" class="sr-only">
+                Enter email
+              </label>
+              <input
+                type="text"
+                readonly
+                class="form-control-plaintext"
+                id="staticEmail2"
+                value="Enter email address"
+              />
+            </div>
+            <div class="form-group mx-sm-3 mb-2">
+              <label for="inputPassword2" class="sr-only">
+                Password
+              </label>
+              <input
+                type="email"
+                class="form-control"
+                id="email"
+                placeholder="example@domain.com"
+                name="email"
+              />
+            </div>
+            <button type="submit" class="btn btn-primary mb-2">
+              Invite
+            </button>
+          </form>
+          <div />
+        </div>
+      </div>
+    );
     return (
       <div className="row">
         <div className="col-3">
@@ -252,6 +345,7 @@ class DashBoard extends Component {
           {documents}
           {addAProjectTask}
           {addTaskCategory}
+          {collaborators}
         </div>
       </div>
     );
