@@ -3,8 +3,13 @@ import {
   newTaskCategory,
   getCategories,
   newTask,
-  getProjectTasks
+  getProjectTasks,
+  addCol,
+  getCol,
+  role
 } from "../services/projectService";
+import { toast } from "react-toastify";
+
 class DashBoard extends Component {
   state = {
     options: [],
@@ -18,7 +23,17 @@ class DashBoard extends Component {
       category: ""
     },
     taskerror: null,
-    projectTasks: []
+    projectTasks: [],
+    newCol: {
+      col: ""
+    },
+    colerror: null,
+    cols: [],
+    assignrole: {
+      col: "",
+      role: "Architect"
+    },
+    assignerror: null
   };
 
   async componentDidMount() {
@@ -35,7 +50,7 @@ class DashBoard extends Component {
           category: categories.data[0].name
         }
       });
-
+      this.getCols();
       this.getProjectTasks();
 
       //refresh categories
@@ -93,16 +108,30 @@ class DashBoard extends Component {
     this.setState({ ...this.state, newTask: project, taskerror: null });
   };
 
+  handleAssignRoleChange = e => {
+    const assignrole = { ...this.state.assignrole };
+    assignrole[e.currentTarget.name] = e.currentTarget.value;
+    this.setState({ ...this.state, assignrole: assignrole, assignerror: null });
+  };
+
+  handlenewColChange = e => {
+    const col = { ...this.state.newCol };
+    col[e.currentTarget.name] = e.currentTarget.value;
+    this.setState({ ...this.state, newCol: col, colerror: null });
+  };
+
   getOptions() {
     let user = this.props.location.state.project.role;
     if (user === "Project Manager") {
       return [
         "Dashboard",
         "Project tasks",
+        "Assign Roles",
         "Project Documents",
         "Add a project task",
         "Add a task Category",
-        "Invite collaborators"
+        "Invite collaborators",
+        "Add a Project Document"
       ];
     } else if (user === "Architect") {
       return ["Dashboard", "Add a task", "Upload a Document"];
@@ -122,6 +151,58 @@ class DashBoard extends Component {
       projectTasks: projectTasks.data
     });
   }
+
+  async getCols() {
+    const projectCols = await getCol(this.props.location.state.project.id);
+    this.setState({
+      ...this.state,
+      cols: projectCols.data,
+      assignrole: { col: projectCols.data[0], role: "Architect" }
+    });
+  }
+
+  projectAssignRole = async () => {
+    try {
+      await role(
+        this.props.location.state.project.id,
+        this.state.assignrole.col,
+        this.state.assignrole.role,
+        this.props.location.state.project
+      );
+      toast.success("Project role assigned successfully!", {
+        position: toast.POSITION.TOP_CENTER
+      });
+    } catch (error) {
+      if (error.response && error.response.status === 400) {
+        this.setState({ assignerror: error.response.data });
+      }
+    }
+  };
+
+  async addCollaborator() {
+    try {
+      await addCol(this.props.location.state.project.id, this.state.newCol.col);
+      this.setState({ ...this.state, newCol: { col: "" } });
+      toast.success("Invitation sent successfully!", {
+        position: toast.POSITION.TOP_CENTER
+      });
+    } catch (error) {
+      if (error.response && error.response.status === 400) {
+        this.setState({ colerror: error.response.data });
+      }
+    }
+  }
+
+  handlenewCol = e => {
+    e.preventDefault();
+    this.addCollaborator();
+  };
+
+  handleAssignRole = e => {
+    e.preventDefault();
+    console.log("eee");
+    this.projectAssignRole();
+  };
   newTaskF = () => {
     this.setState({
       ...this.state,
@@ -159,12 +240,6 @@ class DashBoard extends Component {
                         {task.category}
                       </h6>
                       <p class="card-text">{task.description}</p>
-                      <a href="#" class="card-link">
-                        Card link
-                      </a>
-                      <a href="#" class="card-link">
-                        Another link
-                      </a>
                     </div>
                   </div>
                 </div>
@@ -184,6 +259,91 @@ class DashBoard extends Component {
             With supporting text below as a natural lead-in to additional
             content.
           </p>
+        </div>
+      </div>
+    );
+
+    let adddocument = this.state.selectedOption ===
+      "Add a Project Document" && (
+      <div class="card">
+        <div class="card-header">Add Project Document</div>
+        <div class="card-body">
+          <form>
+            <div class="form-group">
+              <label for="exampleInputEmail1">Email address</label>
+              <input
+                type="email"
+                class="form-control"
+                id="exampleInputEmail1"
+                aria-describedby="emailHelp"
+                placeholder="Enter email"
+              />
+              <small id="emailHelp" class="form-text text-muted">
+                We'll never share your email with anyone else.
+              </small>
+            </div>
+            <div class="custom-file form-group">
+              <input
+                type="file"
+                class="custom-file-input form-control"
+                id="document"
+              />
+              <label class="custom-file-label" htmlFor="customFile">
+                Choose document
+              </label>
+            </div>
+            <button type="submit" class="btn btn-primary mt-3">
+              Upload
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+
+    let assignRoles = this.state.selectedOption === "Assign Roles" && (
+      <div class="card">
+        <div class="card-header">Assign Roles</div>
+        <div class="card-body">
+          <form onSubmit={this.handleAssignRole}>
+            <div class="form-group">
+              {this.state.assignerror && (
+                <div className="alert alert-danger" role="alert">
+                  {this.state.assignerror}
+                </div>
+              )}
+              <label htmlFor="exampleFormControlSelect1">
+                Select Collaborator
+              </label>
+              <select
+                class="form-control"
+                id="colemail"
+                onChange={this.handleAssignRoleChange}
+                name="col"
+                value={this.state.assignrole.col}
+              >
+                {this.state.cols.map(col => {
+                  return <option key={col}>{col}</option>;
+                })}
+              </select>
+            </div>
+            <div class="form-group">
+              <label htmlFor="role">Select Role</label>
+              <select
+                class="form-control"
+                id="role"
+                onChange={this.handleAssignRoleChange}
+                name="role"
+              >
+                <option>Architect</option>
+                <option>Developer</option>
+                <option>UI/UX Engineer</option>
+                <option>QA Engineer</option>
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary">
+              Assign
+            </button>
+          </form>
         </div>
       </div>
     );
@@ -284,7 +444,7 @@ class DashBoard extends Component {
               {this.state.colerror}
             </div>
           )}
-          <form class="form-inline">
+          <form class="form-inline" onSubmit={this.handlenewCol}>
             <div class="form-group mb-2">
               <label for="staticEmail2" class="sr-only">
                 Enter email
@@ -299,14 +459,16 @@ class DashBoard extends Component {
             </div>
             <div class="form-group mx-sm-3 mb-2">
               <label for="inputPassword2" class="sr-only">
-                Password
+                email
               </label>
               <input
                 type="email"
                 class="form-control"
                 id="email"
                 placeholder="example@domain.com"
-                name="email"
+                name="col"
+                value={this.state.newCol.col}
+                onChange={this.handlenewColChange}
               />
             </div>
             <button type="submit" class="btn btn-primary mb-2">
@@ -345,7 +507,9 @@ class DashBoard extends Component {
           {documents}
           {addAProjectTask}
           {addTaskCategory}
+          {adddocument}
           {collaborators}
+          {assignRoles}
         </div>
       </div>
     );

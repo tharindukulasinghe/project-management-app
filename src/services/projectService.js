@@ -53,3 +53,24 @@ export function newTask(title, description, category, projectId) {
 export function getProjectTasks(id) {
   return http.get(apiEndpoint + `/getProjectTasks?id=${id}`);
 }
+
+export function addCol(id, col) {
+  return http.get(apiEndpoint + `/inviteCol?projectId=${id}&email=${col}`);
+}
+
+export function getCol(id) {
+  return http.get(apiEndpoint + `/getCols?id=${id}`);
+}
+
+export function role(id, email, role, project) {
+  return http.post(apiEndpoint + "/projectRoleAssign", {
+    id: id,
+    email: email,
+    role: role,
+    project: project
+  });
+}
+
+export function assignRole() {
+  alert("called");
+}
