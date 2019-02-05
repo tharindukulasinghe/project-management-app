@@ -71,6 +71,27 @@ export function role(id, email, role, project) {
   });
 }
 
-export function assignRole() {
-  alert("called");
+export function fileUpload(file, title, id) {
+  const config = {
+    headers: {
+      "content-type": "multipart/form-data"
+    }
+  };
+
+  const formData = new FormData();
+  formData.append("document", file);
+  formData.append("title", title);
+  formData.append("id", id);
+  return http.post(apiEndpoint + "/projectDocument", formData, config);
+}
+
+export function getDocs(id) {
+  return http.get(apiEndpoint + `/getDocs?id=${id}`);
+}
+
+export function assignTask(taskid, email) {
+  return http.post(apiEndpoint + "/projectTaskAssign", {
+    taskid: taskid,
+    email: email
+  });
 }

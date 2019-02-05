@@ -6,9 +6,12 @@ import {
   getProjectTasks,
   addCol,
   getCol,
-  role
+  role,
+  fileUpload,
+  getDocs
 } from "../services/projectService";
 import { toast } from "react-toastify";
+import { publicUrl } from "../config.json";
 
 class DashBoard extends Component {
   state = {
@@ -33,7 +36,18 @@ class DashBoard extends Component {
       col: "",
       role: "Architect"
     },
-    assignerror: null
+    assignerror: null,
+    newdocument: {
+      title: "",
+      file: null
+    },
+    uploaderror: null,
+    projectDocs: [],
+    assigntask: {
+      assigntask: "",
+      email: ""
+    },
+    assigntaskerror: null
   };
 
   async componentDidMount() {
@@ -52,7 +66,7 @@ class DashBoard extends Component {
       });
       this.getCols();
       this.getProjectTasks();
-
+      this.getProjectDocs();
       //refresh categories
     } catch (error) {
       alert(error);
@@ -83,7 +97,7 @@ class DashBoard extends Component {
       //refresh tasks
     } catch (error) {
       if (error.response && error.response.status === 400) {
-        this.setState({ taskerror: error.response.data });
+        this.setState({ ...this.state, taskerror: error.response.data });
       }
     }
   };
@@ -97,7 +111,7 @@ class DashBoard extends Component {
       //refresh categories
     } catch (error) {
       if (error.response && error.response.status === 400) {
-        this.setState({ error: error.response.data });
+        this.setState({ ...this.state, error: error.response.data });
       }
     }
   };
@@ -114,6 +128,16 @@ class DashBoard extends Component {
     this.setState({ ...this.state, assignrole: assignrole, assignerror: null });
   };
 
+  handleAssignRoleChange = e => {
+    const assigntask = { ...this.state.assigntask };
+    assigntask[e.currentTarget.name] = e.currentTarget.value;
+    this.setState({
+      ...this.state,
+      assigntask: assigntask,
+      assigntaskerror: null
+    });
+  };
+
   handlenewColChange = e => {
     const col = { ...this.state.newCol };
     col[e.currentTarget.name] = e.currentTarget.value;
@@ -126,12 +150,13 @@ class DashBoard extends Component {
       return [
         "Dashboard",
         "Project tasks",
+        "Add a project task",
+        "Assign Tasks",
+        "Add a task Category",
         "Assign Roles",
         "Project Documents",
-        "Add a project task",
-        "Add a task Category",
-        "Invite collaborators",
-        "Add a Project Document"
+        "Add a Project Document",
+        "Invite collaborators"
       ];
     } else if (user === "Architect") {
       return ["Dashboard", "Add a task", "Upload a Document"];
@@ -139,7 +164,7 @@ class DashBoard extends Component {
   }
 
   onOptionSelect(option) {
-    this.setState({ selectedOption: option });
+    this.setState({ ...this.state, selectedOption: option });
   }
 
   async getProjectTasks() {
@@ -161,6 +186,15 @@ class DashBoard extends Component {
     });
   }
 
+  async getProjectDocs() {
+    const projectDocs = await getDocs(this.props.location.state.project.id);
+    console.log(projectDocs);
+    this.setState({
+      ...this.state,
+      projectDocs: projectDocs.data
+    });
+  }
+
   projectAssignRole = async () => {
     try {
       await role(
@@ -174,7 +208,7 @@ class DashBoard extends Component {
       });
     } catch (error) {
       if (error.response && error.response.status === 400) {
-        this.setState({ assignerror: error.response.data });
+        this.setState({ ...this.state, assignerror: error.response.data });
       }
     }
   };
@@ -188,7 +222,7 @@ class DashBoard extends Component {
       });
     } catch (error) {
       if (error.response && error.response.status === 400) {
-        this.setState({ colerror: error.response.data });
+        this.setState({ ...this.state, colerror: error.response.data });
       }
     }
   }
@@ -210,36 +244,80 @@ class DashBoard extends Component {
     });
   };
 
+  onFileChange = e => {
+    const newdocument = { ...this.state.newdocument };
+    newdocument.file = e.target.files[0];
+    this.setState({ ...this.state, newdocument });
+  };
+
+  onFileTitleChange = e => {
+    const newdocument = { ...this.state.newdocument };
+    newdocument[e.currentTarget.name] = e.currentTarget.value;
+    this.setState({
+      ...this.state,
+      newdocument: newdocument,
+      uploaderror: null
+    });
+  };
+
+  onFileSubmit = e => {
+    e.preventDefault();
+    this.projectFileUpload();
+  };
+
+  async projectFileUpload() {
+    try {
+      await fileUpload(
+        this.state.newdocument.file,
+        this.state.newdocument.title,
+        this.props.location.state.project.id
+      );
+      this.setState({
+        ...this.state,
+        newdocument: {
+          title: "",
+          file: null
+        }
+      });
+      toast.success("Document Successfully uploaded!", {
+        position: toast.POSITION.TOP_CENTER
+      });
+    } catch (error) {
+      if (error.response && error.response.status === 400) {
+        this.setState({ ...this.state, uploaderror: error.response.data });
+      }
+    }
+  }
   render() {
     let options = this.getOptions();
 
     let dashboard = this.state.selectedOption === "Dashboard" && (
-      <div class="card">
-        <div class="card-header">Project Dashboard</div>
-        <div class="card-body" />
+      <div className="card">
+        <div className="card-header">Project Dashboard</div>
+        <div className="card-body" />
       </div>
     );
 
     let tasks = this.state.selectedOption === "Project tasks" && (
-      <div class="card" style={{ marginRight: 0, paddingRight: 0 }}>
-        <div class="card-body">
-          <button class="btn btn-success" onClick={this.newTaskF}>
+      <div className="card" style={{ marginRight: 0, paddingRight: 0 }}>
+        <div className="card-body">
+          <button className="btn btn-success" onClick={this.newTaskF}>
             Add a task
           </button>
-          <button class="btn btn-info m-2" onClick={this.getProjectTasks}>
+          <button className="btn btn-info m-2" onClick={this.getProjectTasks}>
             Refresh tasks
           </button>
           <div className="row">
             {this.state.projectTasks.map(task => {
               return (
                 <div className="col-6">
-                  <div class="card" style={{ width: 330 }}>
-                    <div class="card-body">
-                      <h5 class="card-title">{task.title}</h5>
-                      <h6 class="card-subtitle mb-2 text-muted">
+                  <div className="card" style={{ width: 330 }}>
+                    <div className="card-body">
+                      <h5 className="card-title">{task.title}</h5>
+                      <h6 className="card-subtitle mb-2 text-muted">
                         {task.category}
                       </h6>
-                      <p class="card-text">{task.description}</p>
+                      <p className="card-text">{task.description}</p>
                     </div>
                   </div>
                 </div>
@@ -251,48 +329,76 @@ class DashBoard extends Component {
     );
 
     let documents = this.state.selectedOption === "Project Documents" && (
-      <div class="card">
-        <div class="card-header">Project Documents</div>
-        <div class="card-body">
-          <h5 class="card-title">Special title treatment</h5>
-          <p class="card-text">
-            With supporting text below as a natural lead-in to additional
-            content.
-          </p>
+      <div className="card">
+        <div className="card-header">Project Documents</div>
+        <div className="card-body">
+          <table class="table">
+            <thead class="thead-dark">
+              <tr>
+                <th scope="col">Title</th>
+                <th scope="col">file name</th>
+                <th scope="col">#</th>
+              </tr>
+            </thead>
+            <tbody>
+              {this.state.projectDocs.map(doc => {
+                return (
+                  <tr>
+                    <td>{doc.title}</td>
+                    <td>{doc.originalname}</td>
+                    <td>
+                      <a
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        href={publicUrl + "/" + doc.savedname}
+                      >
+                        Download
+                      </a>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
     );
 
     let adddocument = this.state.selectedOption ===
       "Add a Project Document" && (
-      <div class="card">
-        <div class="card-header">Add Project Document</div>
-        <div class="card-body">
-          <form>
-            <div class="form-group">
-              <label for="exampleInputEmail1">Email address</label>
+      <div className="card">
+        <div className="card-header">Add Project Document</div>
+        <div className="card-body">
+          <form onSubmit={this.onFileSubmit}>
+            <div className="form-group">
+              {this.state.uploaderror && (
+                <div className="alert alert-danger" role="alert">
+                  {this.state.uploaderror}
+                </div>
+              )}
+              <label htmlFor="documenttitle">Document Title</label>
               <input
-                type="email"
-                class="form-control"
-                id="exampleInputEmail1"
-                aria-describedby="emailHelp"
-                placeholder="Enter email"
+                type="text"
+                className="form-control"
+                id="documenttitle"
+                placeholder="title"
+                name="title"
+                value={this.state.newdocument.title}
+                onChange={this.onFileTitleChange}
               />
-              <small id="emailHelp" class="form-text text-muted">
-                We'll never share your email with anyone else.
-              </small>
             </div>
-            <div class="custom-file form-group">
+            <div className="form-group">
               <input
                 type="file"
-                class="custom-file-input form-control"
+                className=""
                 id="document"
+                onChange={this.onFileChange}
               />
-              <label class="custom-file-label" htmlFor="customFile">
+              <label className="" htmlFor="customFile">
                 Choose document
               </label>
             </div>
-            <button type="submit" class="btn btn-primary mt-3">
+            <button type="submit" className="btn btn-primary mt-3">
               Upload
             </button>
           </form>
@@ -301,11 +407,11 @@ class DashBoard extends Component {
     );
 
     let assignRoles = this.state.selectedOption === "Assign Roles" && (
-      <div class="card">
-        <div class="card-header">Assign Roles</div>
-        <div class="card-body">
+      <div className="card">
+        <div className="card-header">Assign Roles</div>
+        <div className="card-body">
           <form onSubmit={this.handleAssignRole}>
-            <div class="form-group">
+            <div className="form-group">
               {this.state.assignerror && (
                 <div className="alert alert-danger" role="alert">
                   {this.state.assignerror}
@@ -315,7 +421,7 @@ class DashBoard extends Component {
                 Select Collaborator
               </label>
               <select
-                class="form-control"
+                className="form-control"
                 id="colemail"
                 onChange={this.handleAssignRoleChange}
                 name="col"
@@ -326,10 +432,10 @@ class DashBoard extends Component {
                 })}
               </select>
             </div>
-            <div class="form-group">
+            <div className="form-group">
               <label htmlFor="role">Select Role</label>
               <select
-                class="form-control"
+                className="form-control"
                 id="role"
                 onChange={this.handleAssignRoleChange}
                 name="role"
@@ -340,7 +446,7 @@ class DashBoard extends Component {
                 <option>QA Engineer</option>
               </select>
             </div>
-            <button type="submit" class="btn btn-primary">
+            <button type="submit" className="btn btn-primary">
               Assign
             </button>
           </form>
@@ -350,41 +456,41 @@ class DashBoard extends Component {
 
     let addAProjectTask = this.state.selectedOption ===
       "Add a project task" && (
-      <div class="card">
-        <div class="card-header">Add a Project task</div>
-        <div class="card-body">
+      <div className="card">
+        <div className="card-header">Add a Project task</div>
+        <div className="card-body">
           <form onSubmit={this.handleNewTaskSubmit}>
             {this.state.taskerror && (
               <div className="alert alert-danger" role="alert">
                 {this.state.taskerror}
               </div>
             )}
-            <div class="form-group">
+            <div className="form-group">
               <label htmlFor="title">Task Title</label>
               <input
                 type="text"
-                class="form-control"
+                className="form-control"
                 id="title"
                 placeholder="title"
                 name="title"
                 onChange={this.handleChange}
               />
             </div>
-            <div class="form-group">
+            <div className="form-group">
               <label htmlFor="description">Task Description</label>
               <input
                 type="text"
-                class="form-control"
+                className="form-control"
                 id="description"
                 placeholder="description"
                 onChange={this.handleChange}
                 name="description"
               />
             </div>
-            <div class="form-group">
+            <div className="form-group">
               <label for="category">Select a category</label>
               <select
-                class="form-control"
+                className="form-control"
                 id="category"
                 name="category"
                 onChange={this.handleChange}
@@ -395,7 +501,7 @@ class DashBoard extends Component {
                 })}
               </select>
             </div>
-            <button type="submit" class="btn btn-primary">
+            <button type="submit" className="btn btn-primary">
               Add Task
             </button>
           </form>
@@ -405,19 +511,19 @@ class DashBoard extends Component {
 
     let addTaskCategory = this.state.selectedOption ===
       "Add a task Category" && (
-      <div class="card">
-        <div class="card-header">Add a task category</div>
-        <div class="card-body">
+      <div className="card">
+        <div className="card-header">Add a task category</div>
+        <div className="card-body">
           {this.state.error && (
             <div className="alert alert-danger" role="alert">
               {this.state.error}
             </div>
           )}
-          <form class="form-inline" onSubmit={this.handleSubmit}>
-            <div class="form-group mx-sm-3 mb-2">
+          <form className="form-inline" onSubmit={this.handleSubmit}>
+            <div className="form-group mx-sm-3 mb-2">
               <input
                 type="text"
-                class="form-control"
+                className="form-control"
                 id="category"
                 placeholder="category"
                 name="newcategory"
@@ -425,7 +531,7 @@ class DashBoard extends Component {
                 onChange={this.handleCategoryChange}
               />
             </div>
-            <button type="submit" class="btn btn-primary mb-2">
+            <button type="submit" className="btn btn-primary mb-2">
               Add
             </button>
           </form>
@@ -436,34 +542,34 @@ class DashBoard extends Component {
 
     let collaborators = this.state.selectedOption ===
       "Invite collaborators" && (
-      <div class="card">
-        <div class="card-header">Invite Collaborators</div>
-        <div class="card-body">
+      <div className="card">
+        <div className="card-header">Invite Collaborators</div>
+        <div className="card-body">
           {this.state.colerror && (
             <div className="alert alert-danger" role="alert">
               {this.state.colerror}
             </div>
           )}
-          <form class="form-inline" onSubmit={this.handlenewCol}>
-            <div class="form-group mb-2">
-              <label for="staticEmail2" class="sr-only">
+          <form className="form-inline" onSubmit={this.handlenewCol}>
+            <div className="form-group mb-2">
+              <label for="staticEmail2" className="sr-only">
                 Enter email
               </label>
               <input
                 type="text"
                 readonly
-                class="form-control-plaintext"
+                className="form-control-plaintext"
                 id="staticEmail2"
                 value="Enter email address"
               />
             </div>
-            <div class="form-group mx-sm-3 mb-2">
-              <label for="inputPassword2" class="sr-only">
+            <div className="form-group mx-sm-3 mb-2">
+              <label for="inputPassword2" className="sr-only">
                 email
               </label>
               <input
                 type="email"
-                class="form-control"
+                className="form-control"
                 id="email"
                 placeholder="example@domain.com"
                 name="col"
@@ -471,11 +577,62 @@ class DashBoard extends Component {
                 onChange={this.handlenewColChange}
               />
             </div>
-            <button type="submit" class="btn btn-primary mb-2">
+            <button type="submit" className="btn btn-primary mb-2">
               Invite
             </button>
           </form>
           <div />
+        </div>
+      </div>
+    );
+
+    let assignTasks = this.state.selectedOption === "Assign Tasks" && (
+      <div className="card">
+        <div className="card-header">Assign Tasks</div>
+        <div className="card-body">
+          <form onSubmit={this.handleAssignTask}>
+            <div className="form-group">
+              {this.state.assignTaskerror && (
+                <div className="alert alert-danger" role="alert">
+                  {this.state.assignTaskerror}
+                </div>
+              )}
+              <label htmlFor="exampleFormControlSelect1">Select Task</label>
+              <select
+                className="form-control"
+                id="colemail"
+                onChange={this.handleAssignTaskChange}
+                name="col"
+              >
+                {this.state.projectTasks.map(task => {
+                  return (
+                    <option key={task._id} value={task._id}>
+                      {task.title}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+            <div className="form-group">
+              <label htmlFor="exampleFormControlSelect1">
+                Select Collaborator
+              </label>
+              <select
+                className="form-control"
+                id="colemail"
+                onChange={this.handleAssignTaskChange}
+                name="email"
+                value={this.state.assigntask.email}
+              >
+                {this.state.cols.map(col => {
+                  return <option key={col}>{col}</option>;
+                })}
+              </select>
+            </div>
+            <button type="submit" className="btn btn-primary">
+              Assign
+            </button>
+          </form>
         </div>
       </div>
     );
@@ -510,6 +667,7 @@ class DashBoard extends Component {
           {adddocument}
           {collaborators}
           {assignRoles}
+          {assignTasks}
         </div>
       </div>
     );
