@@ -15,7 +15,10 @@ code {
 }
 
 .navbar {
-  margin-bottom: 30px;
+  margin-bottom: 0px;
+}
+.down {
+  margin-top: 80px;
 }
 
 .card-5 {

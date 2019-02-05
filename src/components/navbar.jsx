@@ -1,10 +1,12 @@
 import React, { Component } from "react";
 import { Link, NavLink } from "react-router-dom";
+import "./home/home.css";
+
 class NavBar extends Component {
   state = {};
   render() {
     return (
-      <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
+      <nav className="navbar navbar-expand-lg navbar-dark navbar-custom fixed-top">
         <Link className="navbar-brand" to="/">
           Project Management System
         </Link>
@@ -40,10 +42,16 @@ class NavBar extends Component {
         <form className="form-inline my-2 my-lg-0">
           {!this.props.user && (
             <React.Fragment>
-              <NavLink className="nav-item nav-link" to="/login">
+              <NavLink
+                className="nav-item nav-link btn btn-outline-success form-group"
+                to="/login"
+              >
                 Login
               </NavLink>
-              <NavLink className="nav-item nav-link" to="/register">
+              <NavLink
+                className="nav-item nav-link btn btn-outline-info form-group m-2"
+                to="/register"
+              >
                 Register
               </NavLink>
             </React.Fragment>
@@ -52,7 +60,7 @@ class NavBar extends Component {
             <React.Fragment>
               <NavLink
                 className="nav-item btn btn-outline-success form-group"
-                to="/me"
+                to="/projects"
               >
                 Hi {this.props.user.firstname} !
               </NavLink>

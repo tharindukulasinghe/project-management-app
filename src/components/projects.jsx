@@ -44,7 +44,7 @@ class Projects extends Component {
 
   render() {
     return (
-      <div>
+      <div className="container down">
         <h1>My Projects</h1>
         <button className="btn btn-primary m-4" onClick={this.newProject}>
           New Project
@@ -59,7 +59,6 @@ class Projects extends Component {
                 <th scope="col">Due Date</th>
                 <th scope="col">My Role</th>
                 <th scope="col" />
-                <th scope="col"> </th>
                 <th scope="col"> </th>
               </tr>
             </thead>
@@ -77,14 +76,6 @@ class Projects extends Component {
                       disabled={!(project.role === "Project Manager")}
                     >
                       Update
-                    </button>
-                  </td>
-                  <td>
-                    <button
-                      className="btn btn-outline-danger btn-sm"
-                      disabled={!(project.role === "Project Manager")}
-                    >
-                      Delete
                     </button>
                   </td>
                   <td>

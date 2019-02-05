@@ -2,9 +2,9 @@ import React, { Component } from "react";
 import { Route, Switch, Redirect } from "react-router-dom";
 import "./App.css";
 import Customers from "./components/customers";
-import Pricing from "./components/pricing";
+import Pricing from "./components/pricing/pricing";
 import NotFound from "./components/not-found";
-import Home from "./components/home";
+import Home from "./components/home/home";
 import NavBar from "./components/navbar";
 import Features from "./components/features";
 import Login from "./components/login/login";
@@ -27,9 +27,9 @@ class App extends Component {
   render() {
     return (
       <React.Fragment>
-        <ToastContainer />
         <NavBar user={this.state.user} />
-        <main className="container">
+        <ToastContainer />
+        <main className="">
           <Switch>
             <Route path="/customers" component={Customers} />
             <Route path="/pricing" component={Pricing} />

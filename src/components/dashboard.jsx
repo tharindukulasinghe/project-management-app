@@ -8,7 +8,8 @@ import {
   getCol,
   role,
   fileUpload,
-  getDocs
+  getDocs,
+  assignTask
 } from "../services/projectService";
 import { toast } from "react-toastify";
 import { publicUrl } from "../config.json";
@@ -128,7 +129,7 @@ class DashBoard extends Component {
     this.setState({ ...this.state, assignrole: assignrole, assignerror: null });
   };
 
-  handleAssignRoleChange = e => {
+  handleAssignTaskChange = e => {
     const assigntask = { ...this.state.assigntask };
     assigntask[e.currentTarget.name] = e.currentTarget.value;
     this.setState({
@@ -237,6 +238,30 @@ class DashBoard extends Component {
     console.log("eee");
     this.projectAssignRole();
   };
+
+  handleAssignTask = e => {
+    e.preventDefault();
+    console.log("ee");
+    this.projectAssignTask();
+  };
+
+  projectAssignTask = async () => {
+    try {
+      await assignTask(
+        this.state.assigntask.assigntask,
+        this.state.assigntask.email
+      );
+      toast.success("Task assigned successfully!", {
+        position: toast.POSITION.TOP_CENTER
+      });
+    } catch (error) {
+      if (error.response && error.response.status === 400) {
+        console.log(error);
+        this.setState({ ...this.state, assigntaskerror: error.response.data });
+      }
+    }
+  };
+
   newTaskF = () => {
     this.setState({
       ...this.state,
@@ -294,7 +319,53 @@ class DashBoard extends Component {
     let dashboard = this.state.selectedOption === "Dashboard" && (
       <div className="card">
         <div className="card-header">Project Dashboard</div>
-        <div className="card-body" />
+        <div className="card-body">
+          <h3 class="card-title">
+            Project : {this.props.location.state.project.name}
+          </h3>
+          <div className="row">
+            <div className="col-6">
+              <div class="card">
+                <div class="card-body">
+                  <h5 class="card-title">Collaborators</h5>
+                  <h1 class="card-subtitle mb-2 text-muted">
+                    {this.state.cols.length}
+                  </h1>
+                </div>
+              </div>
+            </div>
+            <div className="col-6">
+              <div class="card">
+                <div class="card-body">
+                  <h5 class="card-title">Project Tasks</h5>
+                  <h1 class="card-subtitle mb-2 text-muted">
+                    {this.state.projectTasks.length}
+                  </h1>
+                </div>
+              </div>
+            </div>
+            <div className="col-6">
+              <div class="card">
+                <div class="card-body">
+                  <h5 class="card-title">Documents</h5>
+                  <h1 class="card-subtitle mb-2 text-muted">
+                    {this.state.projectDocs.length}
+                  </h1>
+                </div>
+              </div>
+            </div>
+            <div className="col-6">
+              <div class="card">
+                <div class="card-body">
+                  <h5 class="card-title">Task Categories</h5>
+                  <h1 class="card-subtitle mb-2 text-muted">
+                    {this.state.cols.length}
+                  </h1>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
 
@@ -318,6 +389,12 @@ class DashBoard extends Component {
                         {task.category}
                       </h6>
                       <p className="card-text">{task.description}</p>
+                      <p className="card-text">Assigned to : </p>
+                      <ul>
+                        {task.assingedPersons.map(i => (
+                          <li>{i}</li>
+                        ))}
+                      </ul>
                     </div>
                   </div>
                 </div>
@@ -592,9 +669,9 @@ class DashBoard extends Component {
         <div className="card-body">
           <form onSubmit={this.handleAssignTask}>
             <div className="form-group">
-              {this.state.assignTaskerror && (
+              {this.state.assigntaskerror && (
                 <div className="alert alert-danger" role="alert">
-                  {this.state.assignTaskerror}
+                  {this.state.assigntaskerror}
                 </div>
               )}
               <label htmlFor="exampleFormControlSelect1">Select Task</label>
@@ -602,8 +679,9 @@ class DashBoard extends Component {
                 className="form-control"
                 id="colemail"
                 onChange={this.handleAssignTaskChange}
-                name="col"
+                name="assigntask"
               >
+                <option value="" />
                 {this.state.projectTasks.map(task => {
                   return (
                     <option key={task._id} value={task._id}>
@@ -622,8 +700,8 @@ class DashBoard extends Component {
                 id="colemail"
                 onChange={this.handleAssignTaskChange}
                 name="email"
-                value={this.state.assigntask.email}
               >
+                <option value=""> </option>
                 {this.state.cols.map(col => {
                   return <option key={col}>{col}</option>;
                 })}
@@ -637,37 +715,39 @@ class DashBoard extends Component {
       </div>
     );
     return (
-      <div className="row">
-        <div className="col-3">
-          <ul className="list-group">
-            {options.map(option => {
-              return (
-                <li
-                  key={option}
-                  className={
-                    option === this.state.selectedOption
-                      ? "list-group-item active pointer"
-                      : "list-group-item pointer"
-                  }
-                  onClick={() => this.onOptionSelect(option)}
-                >
-                  {option}
-                </li>
-              );
-            })}
-          </ul>
-        </div>
+      <div className="container down">
+        <div className="row">
+          <div className="col-3">
+            <ul className="list-group">
+              {options.map(option => {
+                return (
+                  <li
+                    key={option}
+                    className={
+                      option === this.state.selectedOption
+                        ? "list-group-item active pointer"
+                        : "list-group-item pointer"
+                    }
+                    onClick={() => this.onOptionSelect(option)}
+                  >
+                    {option}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
 
-        <div className="col">
-          {dashboard}
-          {tasks}
-          {documents}
-          {addAProjectTask}
-          {addTaskCategory}
-          {adddocument}
-          {collaborators}
-          {assignRoles}
-          {assignTasks}
+          <div className="col">
+            {dashboard}
+            {tasks}
+            {documents}
+            {addAProjectTask}
+            {addTaskCategory}
+            {adddocument}
+            {collaborators}
+            {assignRoles}
+            {assignTasks}
+          </div>
         </div>
       </div>
     );
