@@ -95,10 +95,14 @@ class DashBoard extends Component {
         this.state.newTask.category,
         this.props.location.state.project.id
       );
-      //refresh tasks
+      await this.getProjectTasks();
     } catch (error) {
       if (error.response && error.response.status === 400) {
-        this.setState({ ...this.state, taskerror: error.response.data });
+        this.setState({
+          ...this.state,
+          newTask: { title: "", description: "", category: "" },
+          taskerror: error.response.data
+        });
       }
     }
   };
@@ -160,7 +164,22 @@ class DashBoard extends Component {
         "Invite collaborators"
       ];
     } else if (user === "Architect") {
-      return ["Dashboard", "Add a task", "Upload a Document"];
+      return [
+        "Dashboard",
+        "Project tasks",
+        "Project Documents",
+        "Add a Project Document",
+        "Invite collaborators"
+      ];
+    } else if (user === "Developer") {
+      return [
+        "Dashboard",
+        "Project tasks",
+        "Project Documents",
+        "Invite collaborators"
+      ];
+    } else if (user === "UI/UX Engineer") {
+      return ["Dashboard", "Project tasks", "Project Documents"];
     }
   }
 
@@ -218,6 +237,7 @@ class DashBoard extends Component {
     try {
       await addCol(this.props.location.state.project.id, this.state.newCol.col);
       this.setState({ ...this.state, newCol: { col: "" } });
+      await this.getCols();
       toast.success("Invitation sent successfully!", {
         position: toast.POSITION.TOP_CENTER
       });
@@ -304,6 +324,7 @@ class DashBoard extends Component {
           file: null
         }
       });
+      await this.getProjectDocs();
       toast.success("Document Successfully uploaded!", {
         position: toast.POSITION.TOP_CENTER
       });
