@@ -9,7 +9,8 @@ import {
   role,
   fileUpload,
   getDocs,
-  assignTask
+  assignTask,
+  taskStatusChange
 } from "../services/projectService";
 import { toast } from "react-toastify";
 import { publicUrl } from "../config.json";
@@ -48,7 +49,12 @@ class DashBoard extends Component {
       assigntask: "",
       email: ""
     },
-    assigntaskerror: null
+    assigntaskerror: null,
+    changeTaskStatus: {
+      taskid: "",
+      status: ""
+    },
+    changetaskstatuserror: null
   };
 
   async componentDidMount() {
@@ -143,6 +149,16 @@ class DashBoard extends Component {
     });
   };
 
+  handleTaskStatusChange = e => {
+    const changeTaskStatus = { ...this.state.changeTaskStatus };
+    changeTaskStatus[e.currentTarget.name] = e.currentTarget.value;
+    this.setState({
+      ...this.state,
+      changeTaskStatus: changeTaskStatus,
+      changetaskstatuserror: null
+    });
+  };
+
   handlenewColChange = e => {
     const col = { ...this.state.newCol };
     col[e.currentTarget.name] = e.currentTarget.value;
@@ -161,7 +177,8 @@ class DashBoard extends Component {
         "Assign Roles",
         "Project Documents",
         "Add a Project Document",
-        "Invite collaborators"
+        "Invite collaborators",
+        "Change Tasks Status"
       ];
     } else if (user === "Architect") {
       return [
@@ -263,6 +280,32 @@ class DashBoard extends Component {
     e.preventDefault();
     console.log("ee");
     this.projectAssignTask();
+  };
+
+  handleChangeTaskStatus = e => {
+    e.preventDefault();
+    this.projectTaskStatusChange();
+  };
+
+  projectTaskStatusChange = async () => {
+    try {
+      await taskStatusChange(
+        this.state.changeTaskStatus.taskid,
+        this.state.changeTaskStatus.status
+      );
+      toast.success("Task Status changed successfully!", {
+        position: toast.POSITION.TOP_CENTER
+      });
+      await this.getProjectTasks();
+    } catch (error) {
+      if (error.response && error.response.status === 400) {
+        console.log(error);
+        this.setState({
+          ...this.state,
+          changetaskstatuserror: error.response.data
+        });
+      }
+    }
   };
 
   projectAssignTask = async () => {
@@ -408,6 +451,9 @@ class DashBoard extends Component {
                       <h5 className="card-title">{task.title}</h5>
                       <h6 className="card-subtitle mb-2 text-muted">
                         {task.category}
+                      </h6>
+                      <h6 className="card-subtitle mb-2 text-muted">
+                        Status : {task.status}
                       </h6>
                       <p className="card-text">{task.description}</p>
                       <p className="card-text">Assigned to : </p>
@@ -586,7 +632,7 @@ class DashBoard extends Component {
               />
             </div>
             <div className="form-group">
-              <label for="category">Select a category</label>
+              <label htmlFor="category">Select a category</label>
               <select
                 className="form-control"
                 id="category"
@@ -735,6 +781,58 @@ class DashBoard extends Component {
         </div>
       </div>
     );
+
+    let changeTaskStatus = this.state.selectedOption ===
+      "Change Tasks Status" && (
+      <div className="card">
+        <div className="card-header">Change Task Status</div>
+        <div className="card-body">
+          <form onSubmit={this.handleChangeTaskStatus}>
+            <div className="form-group">
+              {this.state.changetaskstatuserror && (
+                <div className="alert alert-danger" role="alert">
+                  {this.state.changetaskstatuserror}
+                </div>
+              )}
+              <label htmlFor="task">Select Task</label>
+              <select
+                className="form-control"
+                id="task"
+                onChange={this.handleTaskStatusChange}
+                name="taskid"
+              >
+                <option value="" />
+                {this.state.projectTasks.map(task => {
+                  return (
+                    <option key={task._id} value={task._id}>
+                      {task.title}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+            <div className="form-group">
+              <label htmlFor="status">Select Status</label>
+              <select
+                className="form-control"
+                id="status"
+                onChange={this.handleTaskStatusChange}
+                name="status"
+              >
+                <option value=""> </option>
+                <option>On Going</option>
+                <option>Completed</option>
+                <option>Delayed</option>
+              </select>
+            </div>
+            <button type="submit" className="btn btn-primary">
+              Change
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+
     return (
       <div className="container down">
         <div className="row">
@@ -768,6 +866,7 @@ class DashBoard extends Component {
             {collaborators}
             {assignRoles}
             {assignTasks}
+            {changeTaskStatus}
           </div>
         </div>
       </div>

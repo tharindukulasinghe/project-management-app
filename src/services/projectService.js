@@ -95,3 +95,11 @@ export function assignTask(taskid, email) {
     email: email
   });
 }
+
+export function taskStatusChange(taskid, status) {
+  console.log(taskid, status);
+  return http.post(apiEndpoint + "/projectTaskStatusChange", {
+    taskid: taskid,
+    status: status
+  });
+}
